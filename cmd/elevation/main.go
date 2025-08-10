@@ -50,7 +50,7 @@ func main() {
 
 	} else {
 		if tileName == "" {
-			fmt.Fprintf(os.Stderr, "error: must include tileName when passing to stdin")
+			fmt.Fprintln(os.Stderr, "error: must include tileName when passing to stdin")
 			os.Exit(1)
 		}
 		in = os.Stdin
@@ -58,17 +58,14 @@ func main() {
 
 	lat, lng, err := hgt.ParseTileName(tileName)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v", err)
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
 	records, err := hgt.ProcessHGT(in, lat, lng)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v", err)
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
-	}
-	for _, record := range records {
-		fmt.Println(record)
 	}
 
 	var out io.Writer
@@ -77,7 +74,7 @@ func main() {
 	} else {
 		f, err := os.Create(output)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v", err)
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
 		out = f
@@ -87,12 +84,12 @@ func main() {
 	case "csv":
 		err := hgt.HGTRecords(records).CSV(out, true)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v", err)
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
 	case "sqlite": // TODO: sqlite output
 	default:
-		fmt.Fprintf(os.Stderr, "invalid format: %s", format)
+		fmt.Fprintf(os.Stderr, "invalid format: %s\n", format)
 		os.Exit(1)
 	}
 }
