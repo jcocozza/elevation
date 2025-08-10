@@ -69,6 +69,15 @@ func loadMany() {
 		out = f
 	}
 
+	var d db.ElevationDB
+	if format == sqlite {
+		d, err = db.NewElevationDB(output, false)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
 	// process all the files
 	for i, fpath := range files {
 		tileName := strings.TrimSuffix(filepath.Base(fpath), filepath.Ext(fpath))
@@ -97,17 +106,21 @@ func loadMany() {
 				os.Exit(1)
 			}
 		case "sqlite":
-			db, err := db.NewElevationDB(output, false)
-			if err != nil {
+			if err = d.CreateRecords(context.TODO(), records); err != nil {
 				fmt.Fprintf(os.Stderr, "error: %v\n", err)
 				os.Exit(1)
 			}
-			if err = db.CreateRecords(context.TODO(), records); err != nil {
-				fmt.Fprintf(os.Stderr, "error: %v\n", err)
-				os.Exit(1)
-			}
+
 		default:
 			fmt.Fprintf(os.Stderr, "invalid format: %s\n", format)
+			os.Exit(1)
+		}
+	}
+
+	if format == sqlite {
+		fmt.Println("records created")
+		if err = d.CreateFinalTable(context.TODO()); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
 	}

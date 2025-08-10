@@ -17,6 +17,9 @@ type ElevationDB interface {
 	//
 	// runs a single transaction for all records
 	CreateRecords(ctx context.Context, records []elevation.HGTRecord) error
+	// copy tmp table over to final table
+	// add indexes, and delete tmp table
+	CreateFinalTable(ctx context.Context) error
 	// return the closest record to the passed lat,lng
 	ReadNearestNeighbor(ctx context.Context, lat float64, lng float64) (elevation.HGTRecord, error)
 	// return the four closest records to the passed lat,lng
@@ -26,7 +29,24 @@ type ElevationDB interface {
 }
 
 func setupDB(db *sql.DB) error {
-	_, err := db.Exec("PRAGMA journal_mode = WAL;")
+	_, err := db.Exec("PRAGMA journal_mode = OFF;")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("PRAGMA synchronous = OFF;")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("PRAGMA cache_size = 1000000;")
+	if err != nil {
+		return err
+	}
+	//_, err = db.Exec("PRAGMA locking_mode = EXCLUSIVE;")
+	//if err != nil {return err}
+	_, err = db.Exec("PRAGMA temp_store = MEMORY;")
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -47,13 +67,24 @@ func createSQLiteDB(path string, readOnly bool) (*sql.DB, error) {
 	return db, nil
 }
 
+// insert optimized
+//
+// this will be dropped after it is created
+const tmpSchema string = `
+create table if not exists tmp_srtm (
+	latitude real,
+	longitude real,
+	elevation real
+);`
+
+// read/space optimized
 const schema string = `
 create table if not exists srtm (
 	latitude real,
 	longitude real,
 	elevation real,
 	primary key (latitude, longitude)
-);`
+) without rowid;`
 
 // use readOnly when serving the data as nothing should be written to the db
 //
@@ -62,6 +93,10 @@ func NewElevationDB(path string, readOnly bool) (ElevationDB, error) {
 	db, err := createSQLiteDB(path, readOnly)
 	if err != nil {
 		return nil, err
+	}
+	_, err = db.Exec(tmpSchema)
+	if err != nil {
+		return nil, fmt.Errorf("error failed to execute schema: %v", err)
 	}
 	_, err = db.Exec(schema)
 	if err != nil {
@@ -76,7 +111,7 @@ type ElevationSQLiteDB struct {
 }
 
 func (db *ElevationSQLiteDB) CreateRecord(ctx context.Context, lat float64, lng float64, elevation float64) error {
-	q := "insert into srtm (latitude, longitude, elevation) values (?,?,?);"
+	q := "insert into tmp_srtm (latitude, longitude, elevation) values (?,?,?);"
 	_, err := db.ExecContext(ctx, q, lat, lng, elevation)
 	return err
 }
@@ -87,7 +122,7 @@ func (db *ElevationSQLiteDB) CreateRecords(ctx context.Context, records []elevat
 		return err
 	}
 	defer tx.Rollback()
-	stmt, err := tx.PrepareContext(ctx, "insert into srtm (latitude, longitude, elevation) values (?,?,?);")
+	stmt, err := tx.PrepareContext(ctx, "insert into tmp_srtm (latitude, longitude, elevation) values (?,?,?);")
 	if err != nil {
 		return err
 	}
@@ -98,6 +133,31 @@ func (db *ElevationSQLiteDB) CreateRecords(ctx context.Context, records []elevat
 		}
 	}
 	return tx.Commit()
+}
+
+func (db *ElevationSQLiteDB) CreateFinalTable(ctx context.Context) error {
+	//tx, err := db.BeginTx(ctx, nil)
+	//if err != nil {
+	//	return err
+	//}
+	//defer tx.Rollback()
+
+	q1 := `insert into srtm select * from tmp_srtm order by latitude, longitude;`
+	_, err := db.ExecContext(ctx, q1)
+	if err != nil {
+		return err
+	}
+	q2 := `drop table tmp_srtm;`
+	_, err = db.ExecContext(ctx, q2)
+	if err != nil {
+		return err
+	}
+	q3 := `VACUUM;` // this can dramatically reduce overall db size
+	_, err = db.ExecContext(ctx, q3)
+	if err != nil {
+		return err
+	}
+	return nil //tx.Commit()
 }
 
 func (db *ElevationSQLiteDB) ReadNearestNeighbor(ctx context.Context, lat float64, lng float64) (elevation.HGTRecord, error) {

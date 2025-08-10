@@ -105,6 +105,10 @@ func load() {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
+		if err = db.CreateFinalTable(context.TODO()); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
 	default:
 		fmt.Fprintf(os.Stderr, "invalid format: %s\n", format)
 		os.Exit(1)
