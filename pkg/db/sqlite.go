@@ -3,11 +3,27 @@ package db
 import (
 	"context"
 	"database/sql"
-	"elevation/internal/hgt"
+	"elevation"
 	"fmt"
 
 	_ "modernc.org/sqlite"
 )
+
+// repository for interacting with the generated sqlite db
+type ElevationDB interface {
+	// add a single record
+	CreateRecord(ctx context.Context, lat float64, lng float64, elevation float64) error
+	// for bulk loading
+	//
+	// runs a single transaction for all records
+	CreateRecords(ctx context.Context, records []elevation.HGTRecord) error
+	// return the closest record to the passed lat,lng
+	ReadNearestNeighbor(ctx context.Context, lat float64, lng float64) (elevation.HGTRecord, error)
+	// return the four closest records to the passed lat,lng
+	ReadFourNeighbors(ctx context.Context, lat float64, lng float64, spacing elevation.Spacing) ([4]elevation.HGTRecord, error)
+	// return the sixteen closest records to the passed lat,lng
+	ReadSixteenNeighbors(ctx context.Context, lat float64, lng float64, spacing elevation.Spacing) ([16]elevation.HGTRecord, error)
+}
 
 func setupDB(db *sql.DB) error {
 	_, err := db.Exec("PRAGMA journal_mode = WAL;")
@@ -39,15 +55,9 @@ create table if not exists srtm (
 	primary key (latitude, longitude)
 );`
 
-type ElevationDB interface {
-	CreateRecord(ctx context.Context, lat float64, lng float64, elevation float64) error
-	// for bulk loading
-	CreateRecords(ctx context.Context, records []hgt.HGTRecord) error
-	ReadNearestNeighbor(ctx context.Context, lat float64, lng float64) (hgt.HGTRecord, error)
-	ReadFourNeighbors(ctx context.Context, lat float64, lng float64, spacing hgt.Spacing) ([4]hgt.HGTRecord, error)
-	ReadSixteenNeighbors(ctx context.Context, lat float64, lng float64, spacing hgt.Spacing) ([16]hgt.HGTRecord, error)
-}
-
+// use readOnly when serving the data as nothing should be written to the db
+//
+// will create a sqlite db with PRAGMA journal_mode = WAL
 func NewElevationDB(path string, readOnly bool) (ElevationDB, error) {
 	db, err := createSQLiteDB(path, readOnly)
 	if err != nil {
@@ -71,13 +81,12 @@ func (db *ElevationSQLiteDB) CreateRecord(ctx context.Context, lat float64, lng 
 	return err
 }
 
-func (db *ElevationSQLiteDB) CreateRecords(ctx context.Context, records []hgt.HGTRecord) error {
+func (db *ElevationSQLiteDB) CreateRecords(ctx context.Context, records []elevation.HGTRecord) error {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-
 	stmt, err := tx.PrepareContext(ctx, "insert into srtm (latitude, longitude, elevation) values (?,?,?);")
 	if err != nil {
 		return err
@@ -91,7 +100,7 @@ func (db *ElevationSQLiteDB) CreateRecords(ctx context.Context, records []hgt.HG
 	return tx.Commit()
 }
 
-func (db *ElevationSQLiteDB) ReadNearestNeighbor(ctx context.Context, lat float64, lng float64) (hgt.HGTRecord, error) {
+func (db *ElevationSQLiteDB) ReadNearestNeighbor(ctx context.Context, lat float64, lng float64) (elevation.HGTRecord, error) {
 	q := `
 select latitude, longitude, elevation
 from srtm
@@ -101,18 +110,18 @@ limit 1;`
 
 	var latitude float64
 	var longitude float64
-	var elevation float64
+	var elev float64
 	err := row.Scan(
 		&latitude,
 		&longitude,
-		&elevation,
+		&elev,
 	)
 	if err != nil {
-		return hgt.HGTRecord{}, err
+		return elevation.HGTRecord{}, err
 	}
-	return hgt.HGTRecord{Latitude: latitude, Longitude: longitude, Elevation: elevation}, nil
+	return elevation.HGTRecord{Latitude: latitude, Longitude: longitude, Elevation: elev}, nil
 }
-func (db *ElevationSQLiteDB) ReadFourNeighbors(ctx context.Context, lat float64, lng float64, spacing hgt.Spacing) ([4]hgt.HGTRecord, error) {
+func (db *ElevationSQLiteDB) ReadFourNeighbors(ctx context.Context, lat float64, lng float64, spacing elevation.Spacing) ([4]elevation.HGTRecord, error) {
 	q := `
 select latitude, longitude, elevation
 from srtm
@@ -122,7 +131,7 @@ and longitude >= ? - ?
 and longitude <= ? + ?
 order by latitude, longitude;`
 
-	records := [4]hgt.HGTRecord{}
+	records := [4]elevation.HGTRecord{}
 	rows, err := db.QueryContext(ctx, q, lat, spacing, lat, spacing, lng, spacing, lng, spacing)
 	if err != nil {
 		return records, err
@@ -132,22 +141,22 @@ order by latitude, longitude;`
 	for rows.Next() {
 		var latitude float64
 		var longitude float64
-		var elevation float64
+		var elev float64
 		err := rows.Scan(
 			&latitude,
 			&longitude,
-			&elevation,
+			&elev,
 		)
 		if err != nil {
 			return records, err
 		}
-		records[i] = hgt.HGTRecord{Latitude: latitude, Longitude: longitude, Elevation: elevation}
+		records[i] = elevation.HGTRecord{Latitude: latitude, Longitude: longitude, Elevation: elev}
 		i++
 	}
 	return records, nil
 
 }
-func (db *ElevationSQLiteDB) ReadSixteenNeighbors(ctx context.Context, lat float64, lng float64, spacing hgt.Spacing) ([16]hgt.HGTRecord, error) {
+func (db *ElevationSQLiteDB) ReadSixteenNeighbors(ctx context.Context, lat float64, lng float64, spacing elevation.Spacing) ([16]elevation.HGTRecord, error) {
 	q := `
 select latitude, longitude, elevation
 from srtm
@@ -157,7 +166,7 @@ and longitude >= ? - 2 * ?
 and longitude <= ? + 2 * ?
 order by latitude, longitude;`
 
-	records := [16]hgt.HGTRecord{}
+	records := [16]elevation.HGTRecord{}
 	rows, err := db.QueryContext(ctx, q, lat, spacing, lat, spacing, lng, spacing, lng, spacing)
 	if err != nil {
 		return records, err
@@ -167,11 +176,11 @@ order by latitude, longitude;`
 	for rows.Next() {
 		var latitude float64
 		var longitude float64
-		var elevation float64
+		var elev float64
 		err := rows.Scan(
 			&latitude,
 			&longitude,
-			&elevation,
+			&elev,
 		)
 		if err != nil {
 			return records, err
@@ -179,7 +188,7 @@ order by latitude, longitude;`
 		if i > 15 {
 			return records, fmt.Errorf("%d results returned, expected at most 16", i+1)
 		}
-		records[i] = hgt.HGTRecord{Latitude: latitude, Longitude: longitude, Elevation: elevation}
+		records[i] = elevation.HGTRecord{Latitude: latitude, Longitude: longitude, Elevation: elev}
 		i++
 	}
 	return records, nil

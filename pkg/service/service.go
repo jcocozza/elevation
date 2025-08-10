@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"elevation/internal/db"
-	"elevation/internal/hgt"
+	"elevation"
+	"elevation/pkg/db"
 	"fmt"
 	"sort"
 )
@@ -31,21 +31,21 @@ func (s *ElevationService) AddRecord(ctx context.Context, lat float64, lng float
 	return s.db.CreateRecord(ctx, lat, lng, elevation)
 }
 
-func (s *ElevationService) GetNearestNeighbor(ctx context.Context, lat float64, lng float64) (hgt.HGTRecord, error) {
-	return hgt.HGTRecord{}, nil
+func (s *ElevationService) GetNearestNeighbor(ctx context.Context, lat float64, lng float64) (elevation.HGTRecord, error) {
+	return elevation.HGTRecord{}, nil
 }
 
-func (s *ElevationService) GetFourCorners() ([4]hgt.HGTRecord, error) {
-	records := [4]hgt.HGTRecord{}
+func (s *ElevationService) GetFourCorners() ([4]elevation.HGTRecord, error) {
+	records := [4]elevation.HGTRecord{}
 	return records, nil
 }
 
-func (s *ElevationService) GetSixteenPoints() ([16]hgt.HGTRecord, error) {
-	records := [16]hgt.HGTRecord{}
+func (s *ElevationService) GetSixteenPoints() ([16]elevation.HGTRecord, error) {
+	records := [16]elevation.HGTRecord{}
 	return records, nil
 }
 
-func bilinearInterpolation(lat float64, lng float64, records [4]hgt.HGTRecord) float64 {
+func bilinearInterpolation(lat float64, lng float64, records [4]elevation.HGTRecord) float64 {
 	points := records[:]
 
 	// Find the bounding coordinates
@@ -68,7 +68,7 @@ func bilinearInterpolation(lat float64, lng float64, records [4]hgt.HGTRecord) f
 	}
 
 	// Find the four corners
-	var q11, q12, q21, q22 hgt.HGTRecord
+	var q11, q12, q21, q22 elevation.HGTRecord
 	for _, p := range points {
 		if p.Latitude == minLat && p.Longitude == minLng {
 			q11 = p
@@ -113,7 +113,7 @@ func catmullRom(p0, p1, p2, p3, t float64) float64 {
 		(-p0+3*p1-3*p2+p3)*t3)
 }
 
-func bicubicInterpolation(lat float64, lng float64, records [16]hgt.HGTRecord) float64 {
+func bicubicInterpolation(lat float64, lng float64, records [16]elevation.HGTRecord) float64 {
 	points := records[:]
 	sort.Slice(points, func(i int, j int) bool {
 		if points[i].Latitude == points[j].Latitude {
@@ -164,25 +164,25 @@ func bicubicInterpolation(lat float64, lng float64, records [16]hgt.HGTRecord) f
 }
 
 // Use the exported InterpolationMethod type
-func (s *ElevationService) GetPointElevation(ctx context.Context, lat float64, lng float64, spacing hgt.Spacing, interpolationMethod InterpolationMethod) (hgt.HGTRecord, error) {
+func (s *ElevationService) GetPointElevation(ctx context.Context, lat float64, lng float64, spacing elevation.Spacing, interpolationMethod InterpolationMethod) (elevation.HGTRecord, error) {
 	switch interpolationMethod {
 	case NearestNeighbor:
 		return s.db.ReadNearestNeighbor(ctx, lat, lng)
 	case Bilinear:
 		records, err := s.db.ReadFourNeighbors(ctx, lat, lng, spacing)
 		if err != nil {
-			return hgt.HGTRecord{}, err
+			return elevation.HGTRecord{}, err
 		}
-		elevation := bilinearInterpolation(lat, lng, records)
-		return hgt.HGTRecord{Latitude: lat, Longitude: lng, Elevation: elevation}, nil
+		elev := bilinearInterpolation(lat, lng, records)
+		return elevation.HGTRecord{Latitude: lat, Longitude: lng, Elevation: elev}, nil
 	case Bicubic:
 		records, err := s.db.ReadSixteenNeighbors(ctx, lat, lng, spacing)
 		if err != nil {
-			return hgt.HGTRecord{}, err
+			return elevation.HGTRecord{}, err
 		}
-		elevation := bicubicInterpolation(lat, lng, records)
-		return hgt.HGTRecord{Latitude: lat, Longitude: lng, Elevation: elevation}, nil
+		elev := bicubicInterpolation(lat, lng, records)
+		return elevation.HGTRecord{Latitude: lat, Longitude: lng, Elevation: elev}, nil
 	default:
-		return hgt.HGTRecord{}, fmt.Errorf("invalid interpolation method: %s", interpolationMethod)
+		return elevation.HGTRecord{}, fmt.Errorf("invalid interpolation method: %s", interpolationMethod)
 	}
 }

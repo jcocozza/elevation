@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"context"
-	"elevation/internal/hgt"
-	"elevation/internal/service"
+	"elevation"
+	"elevation/pkg/service"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -31,8 +31,8 @@ func (h *ElevationHandler) ElevationHandler(w http.ResponseWriter, r *http.Reque
 		if interpolationMethod == "" {
 			interpolationMethod = service.Bilinear
 		}
-		latStr := params.Get("latitude")
-		lngStr := params.Get("longitude")
+		latStr := r.PathValue("latitude")
+		lngStr := r.PathValue("longitude")
 
 		lat, err := strconv.ParseFloat(latStr, 64)
 		if err != nil {
@@ -45,7 +45,7 @@ func (h *ElevationHandler) ElevationHandler(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		record, err := h.s.GetPointElevation(context.Background(), lat, lng, hgt.SRTM1, interpolationMethod)
+		record, err := h.s.GetPointElevation(context.Background(), lat, lng, elevation.SRTM1, interpolationMethod)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("unable to get elevation: %s", err.Error()), http.StatusInternalServerError)
 			return
@@ -53,7 +53,7 @@ func (h *ElevationHandler) ElevationHandler(w http.ResponseWriter, r *http.Reque
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(record)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("faile to encode json: %s", err.Error()), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("failed to encode json: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
 	default:
