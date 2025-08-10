@@ -23,6 +23,7 @@ Then the `get.sh` script should work.
 
 > [!CAUTION]
 > This will download around ~100GB of (zipped) data to your machine.
+> Everything unzipped is ~346GB
 
 ## Usage
 
