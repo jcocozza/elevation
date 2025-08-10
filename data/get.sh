@@ -1,6 +1,12 @@
 #!/bin/bash
 
+# warning: this will download ~100GB on to your machine
+
 # see this https://urs.earthdata.nasa.gov/documentation/for_users/data_access/curl_and_wget
+# should have this entry in ~/.netrc:
+# machine urs.earthdata.nasa.gov
+#     login <username>
+#     password <password>
 
 total=$(wc -l < srtm30m_urls.txt)
 count=0
@@ -13,6 +19,7 @@ function wait_for_jobs() {
   done
 }
 
+touch ~/.urs_cookies
 while IFS= read -r url || [[ -n "$url" ]]; do
   wait_for_jobs  # wait if max jobs running
 
