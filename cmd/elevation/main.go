@@ -12,6 +12,7 @@ func usage() {
 	fmt.Println("commands")
 	fmt.Println("serve - serve the data in the sqlite db over http")
 	fmt.Println("load - load data from htg")
+	fmt.Println("load-many - load multiple files and/or match on glob")
 	fmt.Println("")
 	fmt.Println("options:")
 	flag.PrintDefaults()
@@ -46,6 +47,8 @@ func main() {
 	switch os.Args[1] {
 	case "load":
 		load()
+	case "load-many":
+		loadMany()
 	case "serve":
 		serve()
 	default:

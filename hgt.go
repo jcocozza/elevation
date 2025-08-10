@@ -18,7 +18,7 @@ var tileNamePattern = regexp.MustCompile(`^[NS]\d{2}[EW]\d{3}$`)
 // tile name is of the form S15W040
 func ParseTileName(name string) (int, int, error) {
 	if !tileNamePattern.MatchString(name) {
-		return -1, -1, fmt.Errorf("invalid title name")
+		return -1, -1, fmt.Errorf("invalid title name: %s", name)
 	}
 	latStr := name[1:3]
 	lat, err := strconv.Atoi(latStr)
