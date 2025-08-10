@@ -12,26 +12,26 @@ import (
 // ensure title name is of the correct format
 var tileNamePattern = regexp.MustCompile(`^[NS]\d{2}[EW]\d{3}$`)
 
-
 type Spacing float64
+
 // constants for spacing
 //
 // SRTM product	  Approx spacing (arc-seconds)	Decimal degrees
 // SRTM1 (≈30 m)	1 arc-second	            1 / 3600 ≈ 0.0002777778°
 // SRTM3 (≈90 m)	3 arc-seconds	            3 / 3600 ≈ 0.0008333333°
 const (
-	SRTM1 Spacing = 1.0/3600.0
-	SRTM3 Spacing = 3.0/3600.0
+	SRTM1 Spacing = 1.0 / 3600.0
+	SRTM3 Spacing = 3.0 / 3600.0
 )
 
 type HGTRecord struct {
-	Latitude  float64
-	Longitude float64
-	Elevation int
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Elevation float64 `json:"elevation"`
 }
 
 func (r HGTRecord) String() string {
-	return fmt.Sprintf("%f %f %d", r.Latitude, r.Longitude, r.Elevation)
+	return fmt.Sprintf("%f %f %f", r.Latitude, r.Longitude, r.Elevation)
 }
 
 // return csv string:
@@ -41,7 +41,7 @@ func (r HGTRecord) CSV() []string {
 	return []string{
 		fmt.Sprintf("%f", r.Latitude),
 		fmt.Sprintf("%f", r.Longitude),
-		fmt.Sprintf("%d", r.Elevation),
+		fmt.Sprintf("%f", r.Elevation),
 	}
 }
 
@@ -112,7 +112,7 @@ func ProcessHGT(r io.Reader, lat int, lng int) ([]HGTRecord, error) {
 		return nil, fmt.Errorf("unexpected file size: %d bytes (%d points)", size, totalPoints)
 	}
 	elevationData := make([]int16, totalPoints)
-	for i := 0; i < totalPoints; i++ {
+	for i := range totalPoints {
 		elevationData[i] = int16(binary.BigEndian.Uint16(data[i*2 : i*2+2]))
 	}
 	// Calculate step size based on grid size
@@ -139,7 +139,7 @@ func ProcessHGT(r io.Reader, lat int, lng int) ([]HGTRecord, error) {
 				continue
 			}
 
-			records[i] = HGTRecord{Latitude: currentLat, Longitude: currentLng, Elevation: int(elevation)}
+			records[i] = HGTRecord{Latitude: currentLat, Longitude: currentLng, Elevation: float64(elevation)}
 			i++
 		}
 	}

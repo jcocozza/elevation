@@ -1,2 +1,4 @@
 *.hgt
 *.hgt.zip
+*.db*
+elevation
