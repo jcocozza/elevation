@@ -2,8 +2,8 @@ package main
 
 import (
 	"elevation/pkg/db"
-	"elevation/pkg/service"
 	"elevation/pkg/server"
+	"elevation/pkg/service"
 	"flag"
 	"fmt"
 	"os"
@@ -12,7 +12,7 @@ import (
 func serve() {
 	serveCmd := flag.NewFlagSet("serve", flag.ExitOnError)
 	serveCmd.Usage = func() {
-		fmt.Printf("usage: %s serve [options] [DB FILE]\n", os.Args[0])
+		fmt.Printf("usage: %s serve [options] [DIR]\n", os.Args[0])
 		fmt.Println("")
 		fmt.Println("options:")
 		serveCmd.PrintDefaults()
