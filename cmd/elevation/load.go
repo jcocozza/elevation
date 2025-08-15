@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"elevation"
-	"elevation/pkg/db"
 	"flag"
 	"fmt"
 	"io"
@@ -70,47 +68,10 @@ func load() {
 		os.Exit(1)
 	}
 
-	records, err := elevation.ProcessHGT(in, lat, lng)
+	records, err := elevation.ProcessHGTFile(in, lat, lng)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
-
-	var out io.Writer
-	if output == "" || output == "-" {
-		out = os.Stdout
-	} else {
-		f, err := os.Create(output)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
-		}
-		out = f
-	}
-
-	switch format {
-	case "csv":
-		err := elevation.HGTToCSV(out, true, records)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
-		}
-	case "sqlite":
-		db, err := db.NewElevationDB(output, false)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
-		}
-		if err = db.CreateRecords(context.TODO(), records); err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
-		}
-		if err = db.CreateFinalTable(context.TODO()); err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
-		}
-	default:
-		fmt.Fprintf(os.Stderr, "invalid format: %s\n", format)
-		os.Exit(1)
-	}
+	writeOut(output, format, records)
 }

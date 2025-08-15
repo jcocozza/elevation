@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"elevation"
 	"elevation/pkg/db"
 	"flag"
@@ -91,7 +90,7 @@ func loadMany() {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
-		records, err := elevation.ProcessHGT(f, lat, lng)
+		records, err := elevation.ProcessHGTFile(f, lat, lng)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
@@ -106,7 +105,7 @@ func loadMany() {
 				os.Exit(1)
 			}
 		case "sqlite":
-			if err = d.CreateRecords(context.TODO(), records); err != nil {
+			if err = db.CreateRecords(d.(*db.ElevationSQLiteDB), records); err != nil {
 				fmt.Fprintf(os.Stderr, "error: %v\n", err)
 				os.Exit(1)
 			}
@@ -119,7 +118,7 @@ func loadMany() {
 
 	if format == sqlite {
 		fmt.Println("records created")
-		if err = d.CreateFinalTable(context.TODO()); err != nil {
+		if err = db.CreateFinalTable(d.(*db.ElevationSQLiteDB)); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}

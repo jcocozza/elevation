@@ -45,7 +45,7 @@ func (h *ElevationHandler) ElevationHandler(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		record, err := h.s.GetPointElevation(context.Background(), lat, lng, elevation.SRTM1, interpolationMethod)
+		record, err := h.s.GetPointElevation(context.Background(), lat, lng, elevation.SRTM3, interpolationMethod)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("unable to get elevation: %s", err.Error()), http.StatusInternalServerError)
 			return

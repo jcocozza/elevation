@@ -13,14 +13,14 @@ const (
 	Bicubic = "bicubic"
 )
 
-type Spacing float64
+// SRTM product
+// SRTM1 (≈30 m)
+// SRTM3 (≈90 m)
+type Resolution int
 
-// constants for spacing
-//
-// SRTM product	  Approx spacing (arc-seconds)	Decimal degrees
-// SRTM1 (≈30 m)	1 arc-second	            1 / 3600 ≈ 0.0002777778°
-// SRTM3 (≈90 m)	3 arc-seconds	            3 / 3600 ≈ 0.0008333333°
-const (
-	SRTM1 Spacing = 1.0 / 3600.0
-	SRTM3 Spacing = 3.0 / 3600.0
-)
+func (d Resolution) Gridsize() int {
+	return int(d) * int(d)
+}
+
+var SRTM1 Resolution = 1201
+var SRTM3 Resolution = 3601

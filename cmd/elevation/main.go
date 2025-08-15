@@ -12,7 +12,10 @@ func usage() {
 	fmt.Println("commands")
 	fmt.Println("serve - serve the data in the sqlite db over http")
 	fmt.Println("load - load data from htg")
+	fmt.Println("load-zip - load data from zipped htg")
 	fmt.Println("load-many - load multiple files and/or match on glob")
+	fmt.Println("query-zip - query a single zip files for an elevation")
+	fmt.Println("query-zip-many - query multiple zip files and/or match on glob")
 	fmt.Println("")
 	fmt.Println("options:")
 	flag.PrintDefaults()
@@ -47,8 +50,14 @@ func main() {
 	switch os.Args[1] {
 	case "load":
 		load()
+	case "load-zip":
+		loadZip()
 	case "load-many":
 		loadMany()
+	case "query-zip":
+		queryZip()
+	case "query-zip-many":
+		queryZipMany()
 	case "serve":
 		serve()
 	default:
