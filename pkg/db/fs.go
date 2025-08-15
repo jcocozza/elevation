@@ -40,7 +40,6 @@ func newElevationFsDb(root string) (ElevationDB, error) {
 
 func (db *ElevationFsDB) ReadElevation(ctx context.Context, resolution elevation.Resolution, lat float64, lng float64) (elevation.HGTRecord, error) {
 	name := elevation.LatLngToTileName(lat, lng)
-	fmt.Println("name: ", name)
 	zr, err := zip.OpenReader(db.root + "/" + name + ext)
 	if err != nil {
 		return elevation.HGTRecord{}, err
