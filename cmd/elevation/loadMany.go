@@ -16,6 +16,7 @@ func loadMany() {
 	loadCmd.Usage = func() {
 		fmt.Printf("usage: %s load-many [options] [FILES...]\n", os.Args[0])
 		fmt.Println("")
+		fmt.Println("load multiple files and/or match on glob into output format")
 		fmt.Println("assumes files are names so that tile name can be extracted from it")
 		fmt.Println("")
 		fmt.Println("options:")

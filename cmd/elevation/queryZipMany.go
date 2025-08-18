@@ -13,7 +13,9 @@ import (
 func queryZipMany() {
 	queryCmd := flag.NewFlagSet("query-zip-many", flag.ExitOnError)
 	queryCmd.Usage = func() {
-		fmt.Printf("usage: %s query-zip [options] [FILE]\n", os.Args[0])
+		fmt.Printf("usage: %s query-zip [options] [DIR]\n", os.Args[0])
+		fmt.Println("")
+		fmt.Println("query over a set of zipped htg files (without needing to unzip)")
 		fmt.Println("")
 		fmt.Println("options:")
 		queryCmd.PrintDefaults()

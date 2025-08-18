@@ -15,6 +15,8 @@ func load() {
 	loadCmd.Usage = func() {
 		fmt.Printf("usage: %s load [options] [FILE]\n", os.Args[0])
 		fmt.Println("")
+		fmt.Println("load an htg file into the output format")
+		fmt.Println("")
 		fmt.Println("options:")
 		loadCmd.PrintDefaults()
 

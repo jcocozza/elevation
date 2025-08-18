@@ -13,6 +13,7 @@ func loadZip() {
 	loadCmd.Usage = func() {
 		fmt.Printf("usage: %s load-zip [options] [FILE]\n", os.Args[0])
 		fmt.Println("")
+		fmt.Println("load a zipped htg file into the output format")
 		fmt.Println("does not read from stdin")
 		fmt.Println("")
 		fmt.Println("options:")

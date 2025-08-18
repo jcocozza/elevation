@@ -14,6 +14,8 @@ func queryZip() {
 	queryCmd.Usage = func() {
 		fmt.Printf("usage: %s query-zip [options] [FILE]\n", os.Args[0])
 		fmt.Println("")
+		fmt.Println("query a zipped htg file (without needing to unzip)")
+		fmt.Println("")
 		fmt.Println("options:")
 		queryCmd.PrintDefaults()
 	}

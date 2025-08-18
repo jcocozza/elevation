@@ -10,7 +10,7 @@ func usage() {
 	fmt.Printf("usage: %s COMMAND [options]\n", os.Args[0])
 	fmt.Println("")
 	fmt.Println("commands")
-	fmt.Println("serve - serve the data in the sqlite db over http")
+	fmt.Println("serve - serve compressed data via http")
 	fmt.Println("load - load data from htg")
 	fmt.Println("load-zip - load data from zipped htg")
 	fmt.Println("load-many - load multiple files and/or match on glob")
