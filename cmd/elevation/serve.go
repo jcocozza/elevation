@@ -21,6 +21,8 @@ func serve() {
 	serveCmd.IntVar(&port, "p", 8000, "port to run server on")
 	var address string
 	serveCmd.StringVar(&address, "a", "0.0.0.0", "interface to bind to")
+	var memCacheSize int64
+	serveCmd.Int64Var(&memCacheSize, "s", 2.5*db.GB, "max memory of the cache (in bytes)")
 
 	var verbose bool
 	serveCmd.BoolVar(&verbose, "v", false, "enable verbose")
@@ -48,7 +50,7 @@ func serve() {
 	}
 	defer f.Close()
 
-	db, err := db.NewElevationDB(fpath, true)
+	db, err := db.NewElevationDB(fpath, true, memCacheSize)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

@@ -26,23 +26,29 @@ func ProcessZippedHGT(zr *zip.ReadCloser) ([]HGTRecord, error) {
 	return ProcessHGTFile(f, lat, lng)
 }
 
-// get the elevation of a (lat,lng) pair from a zip
-func GetElevationFromZip(zr *zip.ReadCloser, lat float64, lng float64, resolution Resolution) (float64, error) {
+func GetDataFromZip(zr *zip.ReadCloser, resolution Resolution) ([]int16, int, int, error) {
 	zf := zr.File[0]
 	fname := zr.File[0].Name
 	tileLat, tileLng, err := ParseTileName(parseFilename(fname))
 	if err != nil {
-		return 0, err
+		return nil, tileLat, tileLng, err
 	}
-
 	f, err := zf.Open()
 	if err != nil {
-		return 0, err
+		return nil, tileLat, tileLng, err
 	}
 	defer f.Close()
-
 	data := make([]int16, resolution.Gridsize())
 	err = binary.Read(f, binary.BigEndian, data)
+	if err != nil {
+		return nil, tileLat, tileLng, err
+	}
+	return data, tileLat, tileLng, nil
+}
+
+// get the elevation of a (lat,lng) pair from a zip
+func GetElevationFromZip(zr *zip.ReadCloser, lat float64, lng float64, resolution Resolution) (float64, error) {
+	data, tileLat, tileLng, err := GetDataFromZip(zr, resolution)
 	if err != nil {
 		return -1, err
 	}

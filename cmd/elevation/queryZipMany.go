@@ -36,7 +36,7 @@ func queryZipMany() {
 		os.Exit(1)
 	}
 	fpath := queryCmd.Arg(0)
-	d, err := db.NewElevationDB(fpath, true)
+	d, err := db.NewElevationDB(fpath, true, -1) // cache doesn't matter for this one
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

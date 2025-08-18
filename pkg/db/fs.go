@@ -4,13 +4,8 @@ import (
 	"archive/zip"
 	"context"
 	"elevation"
-	"errors"
 	"fmt"
-	"io/fs"
-	"os"
 )
-
-const ext string = ".SRTMGL1.hgt.zip"
 
 // TODO: eventually we should implement an in memory version that keeps
 // some amount of the data in memory
@@ -18,16 +13,6 @@ type ElevationFsDB struct {
 	root string
 }
 
-func pathExists(path string) bool {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true
-	}
-	if errors.Is(err, fs.ErrNotExist) {
-		return false
-	}
-	return false
-}
 
 func newElevationFsDb(root string) (ElevationDB, error) {
 	if !pathExists(root) {
