@@ -62,9 +62,16 @@ func (h *ElevationHandler) PointHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 type pointsRequest struct {
-	Polyline string       `json:"polyline"`
+	Polyline string `json:"polyline"`
 	// this really should be [][2]float64
-	Points   [][]float64 `json:"points"`
+	Points [][]float64 `json:"points"`
+}
+
+type PointsResponse struct {
+	Elevations []elevation.HGTRecord `json:"elevations"`
+	Gain       float64               `json:"gain"`
+	Loss       float64               `json:"loss"`
+	Grade      float64               `json:"grade"`
 }
 
 func (h *ElevationHandler) PolylineHandler(w http.ResponseWriter, r *http.Request) {
@@ -117,8 +124,21 @@ func (h *ElevationHandler) PolylineHandler(w http.ResponseWriter, r *http.Reques
 			http.Error(w, fmt.Sprintf("failed to get data: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
+		gain, loss := h.s.ComputeGainLossGrade(context.TODO(), records)
+		var grade float64
+		if len(records) > 1 {
+			grade = h.s.ComputeNetGrade(context.TODO(), records[0], records[1])
+		}
+
+		resp := PointsResponse{
+			Elevations: records,
+			Gain:       gain,
+			Loss:       loss,
+			Grade:      grade,
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(records)
+		err = json.NewEncoder(w).Encode(resp)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("failed to encode json: %s", err.Error()), http.StatusInternalServerError)
 			return
