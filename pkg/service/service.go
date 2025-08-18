@@ -43,3 +43,27 @@ func (s *ElevationService) GetPointElevation(ctx context.Context, lat float64, l
 		return elevation.HGTRecord{}, fmt.Errorf("invalid interpolation method: %s", interpolationMethod)
 	}
 }
+
+func (s *ElevationService) GetPointsElevation(ctx context.Context, points [][]float64, resolution elevation.Resolution, interpolationMethod InterpolationMethod) ([]elevation.HGTRecord, error) {
+	switch interpolationMethod {
+	case NearestNeighbor:
+		fallthrough
+	case Bicubic:
+		fallthrough
+	case Bilinear:
+		elevations := make([]elevation.HGTRecord, len(points))
+		for i, pt := range points {
+			if len(pt) != 2 {
+				return nil, fmt.Errorf("invalid coord: (%v)", pt)
+			}
+			rec, err := s.db.ReadElevation(ctx, resolution, pt[0], pt[1])
+			if err != nil {
+				return nil, err
+			}
+			elevations[i] = rec
+		}
+		return elevations, nil
+	default:
+		return nil, fmt.Errorf("invalid interpolation method: %s", interpolationMethod)
+	}
+}

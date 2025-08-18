@@ -1,3 +1,5 @@
 *.hgt
 *.hgt.zip
 *.db*
+*.json
+*.sh

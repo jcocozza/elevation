@@ -10,7 +10,8 @@ import (
 func router(handler *handlers.ElevationHandler) http.Handler {
 	// /api routes
 	api := http.NewServeMux()
-	api.HandleFunc("/elevation/{latitude}/{longitude}", handler.ElevationHandler)
+	api.HandleFunc("/elevation/points", handler.PolylineHandler)
+	api.HandleFunc("/elevation/point", handler.PointHandler)
 	return api
 }
 

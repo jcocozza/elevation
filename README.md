@@ -46,8 +46,5 @@ Serving the data:
 
 ### API Routes
 
-Currently there are three interpolation modes. The default in bilinear.
-**Currently bicubic is broken**
-`/elevation/<latitude>/<longitude>?interpolation=nearest`
-`/elevation/<latitude>/<longitude>?interpolation=bilinear`
-`/elevation/<latitude>/<longitude>?interpolation=bicubic`
+`/elevation/points?route=<polyline str>` (or make a post request)
+`/elevation/point?lat=<latitude>&lng=<longitude>`
