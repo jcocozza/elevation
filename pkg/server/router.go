@@ -8,8 +8,8 @@ import (
 )
 
 func router(handler *handlers.ElevationHandler) http.Handler {
-	// /api routes
 	api := http.NewServeMux()
+	api.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("alive")) })
 	api.HandleFunc("/elevation/points", handler.PolylineHandler)
 	api.HandleFunc("/elevation/point", handler.PointHandler)
 	return api

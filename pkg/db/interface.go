@@ -5,7 +5,7 @@ import (
 	"elevation"
 )
 
-// repository for interacting with the generated sqlite db
+// repository for interacting with srtm data on disk
 type ElevationDB interface {
 	// return the closest record to the passed lat,lng
 	ReadElevation(ctx context.Context, resolution elevation.Resolution, lat float64, lng float64) (elevation.HGTRecord, error)

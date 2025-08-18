@@ -2,7 +2,6 @@ package main
 
 import (
 	"elevation"
-	"elevation/pkg/db"
 	"flag"
 	"fmt"
 	"io"
@@ -27,7 +26,7 @@ func loadMany() {
 	var output string
 	loadCmd.StringVar(&output, "o", "", "file name to output (default: stdout)")
 	var format string
-	loadCmd.StringVar(&format, "f", "csv", "output format (options: sqlite, csv)")
+	loadCmd.StringVar(&format, "f", "csv", "output format (options: csv)")
 
 	err := loadCmd.Parse(os.Args[2:])
 	if err != nil {
@@ -69,15 +68,6 @@ func loadMany() {
 		out = f
 	}
 
-	var d db.ElevationDB
-	if format == sqlite {
-		d, err = db.NewElevationDB(output, false)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
-		}
-	}
-
 	// process all the files
 	for i, fpath := range files {
 		tileName := strings.TrimSuffix(filepath.Base(fpath), filepath.Ext(fpath))
@@ -105,22 +95,8 @@ func loadMany() {
 				fmt.Fprintf(os.Stderr, "error: %v\n", err)
 				os.Exit(1)
 			}
-		case "sqlite":
-			if err = db.CreateRecords(d.(*db.ElevationSQLiteDB), records); err != nil {
-				fmt.Fprintf(os.Stderr, "error: %v\n", err)
-				os.Exit(1)
-			}
-
 		default:
 			fmt.Fprintf(os.Stderr, "invalid format: %s\n", format)
-			os.Exit(1)
-		}
-	}
-
-	if format == sqlite {
-		fmt.Println("records created")
-		if err = db.CreateFinalTable(d.(*db.ElevationSQLiteDB)); err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
 	}

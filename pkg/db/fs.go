@@ -12,8 +12,8 @@ import (
 
 const ext string = ".SRTMGL1.hgt.zip"
 
-// TODO: eventually we should implement an in memory very that keeps the
-// 100 most recent files in memory
+// TODO: eventually we should implement an in memory version that keeps
+// some amount of the data in memory
 type ElevationFsDB struct {
 	root string
 }

@@ -22,19 +22,12 @@ func usage() {
 }
 
 const (
-	sqlite = "sqlite"
-	csv    = "csv"
+	csv = "csv"
 )
 
 func validateOutputFormats(output string, format string) error {
 	switch format {
 	case csv:
-		return nil
-	case sqlite:
-		// stdout
-		if output == "" || output == "-" {
-			return fmt.Errorf("cannot use sqlite format and stdout together")
-		}
 		return nil
 	default:
 		return fmt.Errorf("invalid format: %s", format)

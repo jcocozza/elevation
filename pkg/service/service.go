@@ -27,10 +27,6 @@ const (
 	Bicubic = "bicubic"
 )
 
-//func (s *ElevationService) AddRecord(ctx context.Context, lat float64, lng float64, elevation float64) error {
-//	return s.db.CreateRecord(ctx, lat, lng, elevation)
-//}
-
 // Use the exported InterpolationMethod type
 func (s *ElevationService) GetPointElevation(ctx context.Context, lat float64, lng float64, resolution elevation.Resolution, interpolationMethod InterpolationMethod) (elevation.HGTRecord, error) {
 	switch interpolationMethod {
@@ -95,7 +91,6 @@ func haversine(lat1, lon1, lat2, lon2 float64) float64 {
 	lat2 = toRad(lat2)
 	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
 		math.Sin(dLon/2)*math.Sin(dLon/2)*math.Cos(lat1)*math.Cos(lat2)
-
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 	return earthRadius * c
 }

@@ -26,7 +26,7 @@ func load() {
 	var output string
 	loadCmd.StringVar(&output, "o", "", "file name to output (default: stdout)")
 	var format string
-	loadCmd.StringVar(&format, "f", "csv", "output format (options: sqlite, csv)")
+	loadCmd.StringVar(&format, "f", "csv", "output format (options: csv)")
 
 	err := loadCmd.Parse(os.Args[2:])
 	if err != nil {
